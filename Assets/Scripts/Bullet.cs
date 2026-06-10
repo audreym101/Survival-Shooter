@@ -14,13 +14,21 @@ public class Bullet : MonoBehaviour
     {
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
         _timer += Time.deltaTime;
-        if (_timer >= lifetime) BulletPool.Instance.ReturnToPool(gameObject);
+        if (_timer >= lifetime) Deactivate();
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent(out EnemyBase enemy))
             enemy.TakeDamage(damage);
-        BulletPool.Instance.ReturnToPool(gameObject);
+        Deactivate();
+    }
+
+    void Deactivate()
+    {
+        if (BulletPool.Instance != null)
+            BulletPool.Instance.ReturnToPool(gameObject);
+        else
+            gameObject.SetActive(false);
     }
 }
