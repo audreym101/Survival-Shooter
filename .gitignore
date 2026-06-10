@@ -1,0 +1,33 @@
+# Unity generated
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+MemoryCaptures/
+
+# Unity cache
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Visual Studio
+.vs/
+*.csproj
+*.sln
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unity auto-generated meta for ignored folders
+Library.meta
+Temp.meta
+Obj.meta
+Build.meta
+Builds.meta
+Logs.meta
