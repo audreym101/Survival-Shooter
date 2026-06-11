@@ -1291,12 +1291,40 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2058852206}
     - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
       propertyPath: onPlayerDeath.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 828028412}
     - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 302513914}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
       propertyPath: onPlayerDeath.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: EndGame
+      objectReference: {fileID: 0}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ShowPlayerDamage
+      objectReference: {fileID: 0}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: DamageFeedback, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7527352072324544674, guid: 1aa8a2ca52f476249acafad985675f26, type: 3}
+      propertyPath: onHealthChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

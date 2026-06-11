@@ -17,6 +17,12 @@ public class EnemySpawner : MonoBehaviour
 
     void Awake() => _planeManager = FindObjectOfType<ARPlaneManager>();
 
+    void Start()
+    {
+        if (DifficultyManager.Instance != null)
+            spawnInterval = DifficultyManager.Instance.SpawnInterval;
+    }
+
     public void StartSpawning()
     {
         _spawnCoroutine = StartCoroutine(SpawnRoutine());

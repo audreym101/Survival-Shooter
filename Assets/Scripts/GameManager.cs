@@ -22,6 +22,8 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        if (DifficultyManager.Instance != null)
+            gameDuration = DifficultyManager.Instance.GameDuration;
         TimeRemaining = gameDuration;
         IsPlaying = true;
         ScoreManager.Instance?.ResetScore();
