@@ -31,7 +31,9 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        ShowInGame();
+        inGamePanel.SetActive(false);
+        endGamePanel.SetActive(false);
+        GameManager.Instance.onGameStart.AddListener(ShowInGame);
         GameManager.Instance.onGameEnd.AddListener(ShowEndGame);
         GameManager.Instance.onTimeChanged.AddListener(UpdateTimer);
 
