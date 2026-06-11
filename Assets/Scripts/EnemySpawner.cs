@@ -50,21 +50,35 @@ public class EnemySpawner : MonoBehaviour
 
         bool spawnMelee = Random.value > 0.4f;
         GameObject prefab = spawnMelee ? meleeEnemyPrefab : shooterEnemyPrefab;
-        GameObject enemy = Instantiate(prefab, spawnPos.Value, Quaternion.identity);
+
+        // Spawn slightly above plane so they don't clip underground
+        Vector3 pos = spawnPos.Value + Vector3.up * 0.1f;
+        GameObject enemy = Instantiate(prefab, pos, Quaternion.identity);
+
+        // Make sure enemy is visible scale
+        enemy.transform.localScale = Vector3.one;
         _activeEnemies.Add(enemy);
     }
 
     Vector3? GetSpawnPosition()
     {
-        foreach (var plane in _planeManager.trackables)
+        // Try AR planes first
+        if (_planeManager != null)
         {
-            if (plane.alignment == PlaneAlignment.HorizontalUp)
+            foreach (var plane in _planeManager.trackables)
             {
-                Vector2 random = Random.insideUnitCircle * spawnRadius;
-                return plane.transform.position + new Vector3(random.x, 0, random.y);
+                if (plane.alignment == PlaneAlignment.HorizontalUp)
+                {
+                    Vector2 random = Random.insideUnitCircle * spawnRadius;
+                    return plane.transform.position + new Vector3(random.x, 0, random.y);
+                }
             }
         }
-        return null;
+
+        // Fallback for editor testing - spawn around the player
+        Transform cam = Camera.main.transform;
+        Vector2 editorRandom = Random.insideUnitCircle * spawnRadius;
+        return cam.position + new Vector3(editorRandom.x, 0, editorRandom.y + 3f);
     }
 
     void ClearAllEnemies()

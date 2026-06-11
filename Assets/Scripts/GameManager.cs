@@ -20,6 +20,13 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
+    void Start()
+    {
+#if UNITY_EDITOR
+        StartGame();
+#endif
+    }
+
     public void StartGame()
     {
         if (DifficultyManager.Instance != null)
