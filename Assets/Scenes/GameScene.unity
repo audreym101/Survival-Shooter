@@ -4710,12 +4710,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1306336721}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -538.28094, y: -254.6175, z: 23.97705}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1796068233}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1306336723
 MonoBehaviour:
@@ -5957,7 +5957,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1796068233}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: GameWorld
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5975,7 +5975,8 @@ Transform:
   m_LocalPosition: {x: 538.28094, y: 254.6175, z: -23.97705}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1306336722}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1832558738
@@ -6386,6 +6387,7 @@ GameObject:
   - component: {fileID: 2042706085}
   - component: {fileID: 2042706084}
   - component: {fileID: 2042706083}
+  - component: {fileID: 2042706088}
   m_Layer: 0
   m_Name: XR Origin (Mobile AR)
   m_TagString: Untagged
@@ -6416,7 +6418,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2042706082}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e1760703bbd54c04488a8d10600262ab, type: 3}
   m_Name: 
@@ -6473,6 +6475,20 @@ Transform:
   - {fileID: 272846126}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2042706088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042706082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8f0ef04ee19518449ded642d1ff60f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  placementIndicatorPrefab: {fileID: 2726215565027294217, guid: 59b67f49d2d2f75428544202ce898e8a, type: 3}
+  gameWorld: {fileID: 1796068232}
 --- !u!1 &2050643152
 GameObject:
   m_ObjectHideFlags: 0
@@ -11714,7 +11730,6 @@ SceneRoots:
   - {fileID: 1899303201}
   - {fileID: 828028408}
   - {fileID: 168006456}
-  - {fileID: 1306336722}
   - {fileID: 424411363}
   - {fileID: 1072405844}
   - {fileID: 261543047}
