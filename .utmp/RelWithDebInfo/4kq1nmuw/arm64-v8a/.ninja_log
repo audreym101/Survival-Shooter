@@ -1,0 +1,10 @@
+# ninja log v5
+1	1844	8028506632694998	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	5b894b1b2f66a5e0
+320	2115	8028506635467434	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	d92f68d3cd80da95
+466	2177	8028506636113442	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	4b1ff8cdec532e99
+136	2391	8028506638184615	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	52b27a48847c98d7
+856	2450	8028506638835422	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	18927a11d4ea9003
+640	2648	8028506640681173	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	c99a496c2e377ff3
+1022	2652	8028506640798283	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	37c1c052908a5e0c
+1212	2874	8028506643061698	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	8158fb9c61451978
+2874	3165	8028506645954333	C:/Users/rugam/Audrey/Survival Shooter-Audrey/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4kq1nmuw/obj/arm64-v8a/libgame.so	513097d613ad4da6
