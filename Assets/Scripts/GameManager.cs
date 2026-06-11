@@ -20,6 +20,8 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
+    void Start() => StartGame();
+
     public void StartGame()
     {
         TimeRemaining = gameDuration;

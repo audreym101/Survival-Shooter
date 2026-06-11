@@ -11,6 +11,12 @@ public class PlayerShooter : MonoBehaviour
 
     float _nextFireTime;
 
+    void Awake()
+    {
+        if (arCamera == null)
+            arCamera = Camera.main;
+    }
+
     void Update()
     {
         // Mobile touch
@@ -27,7 +33,7 @@ public class PlayerShooter : MonoBehaviour
         if (Time.time < _nextFireTime) return;
         _nextFireTime = Time.time + fireRate;
 
-        muzzleFlash?.Play();
+        if (muzzleFlash != null) muzzleFlash.Play();
         AudioManager.Instance?.PlayShoot();
 
         Ray ray = arCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f));
