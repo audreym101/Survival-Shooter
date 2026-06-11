@@ -7,12 +7,19 @@ public abstract class EnemyBase : MonoBehaviour
 
     protected int currentHealth;
 
-    protected virtual void Awake() => currentHealth = maxHealth;
+    DamageFeedback _feedback;
+
+    protected virtual void Awake()
+    {
+        currentHealth = maxHealth;
+        _feedback = GetComponent<DamageFeedback>();
+    }
 
     public virtual void TakeDamage(int amount)
     {
         currentHealth -= amount;
         AudioManager.Instance?.PlayEnemyDamage();
+        _feedback?.ShowEnemyHit();
         if (currentHealth <= 0) Die();
     }
 
