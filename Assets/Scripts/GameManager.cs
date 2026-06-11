@@ -5,7 +5,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] float gameDuration = 60f;
+    [SerializeField] public float gameDuration = 60f;
 
     public float TimeRemaining { get; private set; }
     public bool IsPlaying { get; private set; }
