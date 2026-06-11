@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerShooter : MonoBehaviour
 {
@@ -12,11 +13,12 @@ public class PlayerShooter : MonoBehaviour
 
     void Update()
     {
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        // Mobile touch
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             TryShoot();
 
-        // Editor testing with mouse
-        if (Application.isEditor && Input.GetMouseButtonDown(0))
+        // Editor mouse click
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             TryShoot();
     }
 
