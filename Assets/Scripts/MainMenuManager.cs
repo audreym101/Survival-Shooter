@@ -22,11 +22,11 @@ public class MainMenuManager : MonoBehaviour
     public void OnPlayPressed() => SceneManager.LoadScene("GameScene");
 
     public void OnLeaderboardPressed()
-    {
-        mainPanel.SetActive(false);
-        leaderboardPanel.SetActive(true);
-        LoadLeaderboard();
-    }
+{
+    mainPanel.SetActive(false);
+    leaderboardPanel.SetActive(true);
+    LoadLeaderboard();
+}
 
     public void OnCloseLeaderboardPressed() => ShowMain();
 
@@ -44,17 +44,21 @@ public class MainMenuManager : MonoBehaviour
         {
             leaderboardText.text = "No scores yet";
             return;
-        }
-
-        var entries = LeaderboardManager.Instance.GetLeaderboardEntries();
-        if (entries.Count == 0)
-        {
-            leaderboardText.text = "No scores yet";
-            return;
-        }
-
-        leaderboardText.text = "";
-        for (int i = 0; i < entries.Count; i++)
-            leaderboardText.text += $"{i + 1}. {entries[i]}\n";
     }
+
+    var entries = LeaderboardManager.Instance.GetLeaderboardEntries();
+
+    if (entries == null || entries.Count == 0)
+    {
+        leaderboardText.text = "No scores yet";
+        return;
+    }
+
+    leaderboardText.text = "";
+
+    for (int i = 0; i < entries.Count; i++)
+    {
+        leaderboardText.text += $"{i + 1}. {entries[i]}\n";
+    }
+}
 }

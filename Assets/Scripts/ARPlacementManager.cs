@@ -1,82 +1,126 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class ARPlacementManager : MonoBehaviour
 {
-    [SerializeField] GameObject placementIndicatorPrefab;
-    [SerializeField] GameObject gameWorld;
+    [Header("AR Components")]
+    [SerializeField] ARRaycastManager raycastManager;
 
-    ARRaycastManager _raycastManager;
-    ARPlaneManager _planeManager;
-    GameObject _indicator;
-    bool _gamePlaced;
+    [Header("Placement")]
+    [SerializeField] GameObject placementIndicator;
+    [SerializeField] GameObject gameWorldPrefab;
 
-    static readonly List<ARRaycastHit> Hits = new List<ARRaycastHit>();
+    GameObject spawnedGameWorld;
+    Pose placementPose;
+    bool placementPoseIsValid = false;
 
-    void Awake()
+    static List<ARRaycastHit> hits = new List<ARRaycastHit>();
+
+    void Start()
     {
-        _raycastManager = GetComponent<ARRaycastManager>();
-        _planeManager = GetComponent<ARPlaneManager>();
-        if (placementIndicatorPrefab != null)
-            _indicator = Instantiate(placementIndicatorPrefab);
-        if (gameWorld != null)
-            gameWorld.SetActive(false);
+#if UNITY_EDITOR
+        // Spawn GameWorld automatically in Editor
+        if (gameWorldPrefab != null)
+        {
+            spawnedGameWorld = Instantiate(
+                gameWorldPrefab,
+                Vector3.zero,
+                Quaternion.identity
+            );
+
+            Debug.Log("Editor Mode: GameWorld spawned");
+
+            GameManager.Instance?.StartGame();
+        }
+
+        if (placementIndicator != null)
+            placementIndicator.SetActive(false);
+#endif
     }
 
     void Update()
     {
-        if (_gamePlaced) return;
+#if !UNITY_EDITOR
+        UpdatePlacementPose();
+        UpdatePlacementIndicator();
 
-        UpdateIndicator();
-
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
-            TryPlaceGame();
-
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-            TryPlaceGame();
+        if (placementPoseIsValid &&
+            Input.touchCount > 0 &&
+            Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            PlaceGameWorld();
+        }
+#endif
     }
 
-    void UpdateIndicator()
+    void UpdatePlacementPose()
     {
-        Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
-        if (_raycastManager.Raycast(screenCenter, Hits, TrackableType.PlaneWithinPolygon))
+        Vector2 screenCenter =
+            new Vector2(Screen.width / 2, Screen.height / 2);
+
+        raycastManager.Raycast(
+            screenCenter,
+            hits,
+            TrackableType.Planes
+        );
+
+        placementPoseIsValid = hits.Count > 0;
+
+        if (placementPoseIsValid)
         {
-            Pose hitPose = Hits[0].pose;
-            if (_indicator != null)
-            {
-                _indicator.SetActive(true);
-                _indicator.transform.SetPositionAndRotation(hitPose.position, hitPose.rotation);
-            }
+            placementPose = hits[0].pose;
+
+            Vector3 cameraForward =
+                Camera.main.transform.forward;
+
+            Vector3 cameraBearing =
+                new Vector3(
+                    cameraForward.x,
+                    0,
+                    cameraForward.z
+                ).normalized;
+
+            placementPose.rotation =
+                Quaternion.LookRotation(cameraBearing);
+        }
+    }
+
+    void UpdatePlacementIndicator()
+    {
+        if (placementIndicator == null)
+            return;
+
+        if (placementPoseIsValid)
+        {
+            placementIndicator.SetActive(true);
+
+            placementIndicator.transform.SetPositionAndRotation(
+                placementPose.position,
+                placementPose.rotation
+            );
         }
         else
         {
-            if (_indicator != null) _indicator.SetActive(false);
+            placementIndicator.SetActive(false);
         }
     }
 
-    void TryPlaceGame()
+    void PlaceGameWorld()
     {
-        Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
-        if (!_raycastManager.Raycast(screenCenter, Hits, TrackableType.PlaneWithinPolygon)) return;
+        if (spawnedGameWorld != null)
+            return;
 
-        Pose hitPose = Hits[0].pose;
-        _gamePlaced = true;
+        spawnedGameWorld = Instantiate(
+            gameWorldPrefab,
+            placementPose.position,
+            placementPose.rotation
+        );
 
-        if (_indicator != null) _indicator.SetActive(false);
+        placementIndicator.SetActive(false);
 
-        if (gameWorld != null)
-        {
-            gameWorld.transform.SetPositionAndRotation(hitPose.position, hitPose.rotation);
-            gameWorld.SetActive(true);
-        }
-
-        // Disable plane visuals after placement
-        foreach (var plane in _planeManager.trackables)
-            plane.gameObject.SetActive(false);
-        _planeManager.enabled = false;
+        Debug.Log("Game World Placed!");
 
         GameManager.Instance?.StartGame();
     }

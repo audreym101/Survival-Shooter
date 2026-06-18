@@ -1,7 +1,5 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using TMPro;
-using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -18,33 +16,46 @@ public class UIManager : MonoBehaviour
 
     [Header("EndGame UI")]
     [SerializeField] TMP_Text finalScoreText;
-    [SerializeField] TMP_Text enemiesDefeatedText;
+    [SerializeField] TMP_Text enemiesText;
     [SerializeField] TMP_Text timeSurvivedText;
-
-    float _timeSurvived;
 
     void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
     }
 
     void Start()
     {
-        inGamePanel.SetActive(false);
-        endGamePanel.SetActive(false);
+        Debug.Log("UIManager initialized in GameScene");
+
+        ShowInGame(); // default state (NO start menu anymore)
+
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("GameManager not found!");
+            return;
+        }
+
         GameManager.Instance.onGameStart.AddListener(ShowInGame);
         GameManager.Instance.onGameEnd.AddListener(ShowEndGame);
         GameManager.Instance.onTimeChanged.AddListener(UpdateTimer);
 
-        PlayerHealth playerHealth = FindObjectOfType<PlayerHealth>();
-        if (playerHealth != null)
-            playerHealth.onHealthChanged.AddListener(UpdateHealth);
+        PlayerHealth player = Object.FindFirstObjectByType<PlayerHealth>();
+        if (player != null)
+            player.onHealthChanged.AddListener(UpdateHealth);
 
-        ScoreManager.Instance.onScoreChanged.AddListener(UpdateScore);
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.onScoreChanged.AddListener(UpdateScore);
     }
 
-    // ── Panel Control ──────────────────────────────────────
+    // ─────────────────────────────
+    // PANEL CONTROL
+    // ─────────────────────────────
 
     void ShowInGame()
     {
@@ -54,28 +65,65 @@ public class UIManager : MonoBehaviour
 
     void ShowEndGame()
     {
-        _timeSurvived = GameManager.Instance.gameDuration - GameManager.Instance.TimeRemaining;
         inGamePanel.SetActive(false);
         endGamePanel.SetActive(true);
 
-        finalScoreText.text = $"Score: {ScoreManager.Instance.Score}";
-        enemiesDefeatedText.text = $"Enemies: {ScoreManager.Instance.EnemiesDefeated}";
-        timeSurvivedText.text = $"Time: {Mathf.FloorToInt(_timeSurvived)}s";
+        if (ScoreManager.Instance == null || GameManager.Instance == null)
+            return;
+
+        float timeSurvived = GameManager.Instance.gameDuration - GameManager.Instance.TimeRemaining;
+
+        finalScoreText.text = "Score: " + ScoreManager.Instance.Score;
+        enemiesText.text = "Enemies: " + ScoreManager.Instance.EnemiesDefeated;
+        timeSurvivedText.text = "Time: " + Mathf.FloorToInt(timeSurvived) + "s";
 
         LeaderboardManager.Instance?.SaveScore(
             ScoreManager.Instance.Score,
             ScoreManager.Instance.EnemiesDefeated,
-            Mathf.FloorToInt(_timeSurvived));
+            Mathf.FloorToInt(timeSurvived)
+        );
     }
 
-    // ── HUD Updates ────────────────────────────────────────
+    // ─────────────────────────────
+    // HUD UPDATES
+    // ─────────────────────────────
 
-    void UpdateHealth(int health) => healthText.text = $"HP: {health}";
-    void UpdateScore(int score) => scoreText.text = $"Score: {score}";
-    void UpdateTimer(float time) => timerText.text = $"Time: {Mathf.CeilToInt(time)}";
+    void UpdateHealth(int health)
+    {
+        if (healthText != null)
+            healthText.text = "HP: " + health;
+    }
 
-    // ── Button Callbacks ───────────────────────────────────
+    void UpdateScore(int score)
+    {
+        if (scoreText != null)
+            scoreText.text = "Score: " + score;
+    }
 
-    public void OnRestartPressed() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    public void OnMainMenuPressed() => SceneManager.LoadScene("MainMenuScene");
+    void UpdateTimer(float time)
+    {
+        if (timerText != null)
+            timerText.text = "Time: " + Mathf.CeilToInt(time);
+    }
+
+    // ─────────────────────────────
+    // BUTTON FUNCTIONS
+    // ─────────────────────────────
+
+    public void OnStartPressed()
+    {
+        Debug.Log("Start button pressed");
+        GameManager.Instance.StartGame();
+    }
+
+    public void OnRestartPressed()
+    {
+        Debug.Log("Restart pressed");
+        GameManager.Instance.StartGame();
+    }
+
+    public void OnMainMenuPressed()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenuScene");
+    }
 }
