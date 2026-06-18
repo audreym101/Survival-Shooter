@@ -6,85 +6,142 @@ using UnityEngine.XR.ARSubsystems;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [SerializeField] GameObject meleeEnemyPrefab;
-    [SerializeField] GameObject shooterEnemyPrefab;
-    [SerializeField] float spawnInterval = 5f;
-    [SerializeField] float spawnRadius = 2f;
+    [Header("Enemy Prefabs")]
+    [SerializeField] private GameObject meleeEnemyPrefab;
+    [SerializeField] private GameObject shooterEnemyPrefab;
 
-    ARPlaneManager _planeManager;
-    readonly List<GameObject> _activeEnemies = new List<GameObject>();
-    Coroutine _spawnCoroutine;
+    [Header("Spawn Settings")]
+    [SerializeField] private float spawnInterval = 5f;
+    [SerializeField] private float spawnRadius = 3f;
+    [SerializeField] private int maxEnemies = 10;
 
-    void Awake() => _planeManager = FindObjectOfType<ARPlaneManager>();
+    private ARPlaneManager planeManager;
+    private readonly List<GameObject> activeEnemies = new();
+    private Coroutine spawnCoroutine;
 
-    void Start()
+    private void Awake()
     {
-        if (DifficultyManager.Instance != null)
-            spawnInterval = DifficultyManager.Instance.SpawnInterval;
+        planeManager = FindFirstObjectByType<ARPlaneManager>();
     }
 
     public void StartSpawning()
     {
-        _spawnCoroutine = StartCoroutine(SpawnRoutine());
+        if (spawnCoroutine == null)
+        {
+            spawnCoroutine = StartCoroutine(SpawnRoutine());
+            Debug.Log("Enemy spawning started");
+        }
     }
 
     public void StopSpawning()
     {
-        if (_spawnCoroutine != null) StopCoroutine(_spawnCoroutine);
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
+
         ClearAllEnemies();
     }
 
-    IEnumerator SpawnRoutine()
+    private IEnumerator SpawnRoutine()
     {
-        while (true)
+        while (GameManager.Instance != null &&
+               GameManager.Instance.IsPlaying)
         {
+            if (activeEnemies.Count < maxEnemies)
+            {
+                SpawnEnemy();
+            }
+
             yield return new WaitForSeconds(spawnInterval);
-            SpawnEnemy();
         }
     }
 
-    void SpawnEnemy()
+    private void SpawnEnemy()
     {
-        Vector3? spawnPos = GetSpawnPosition();
-        if (spawnPos == null) return;
+        Vector3? spawnPosition = GetSpawnPosition();
+
+        if (spawnPosition == null)
+            return;
 
         bool spawnMelee = Random.value > 0.4f;
-        GameObject prefab = spawnMelee ? meleeEnemyPrefab : shooterEnemyPrefab;
 
-        // Spawn slightly above plane so they don't clip underground
-        Vector3 pos = spawnPos.Value + Vector3.up * 0.1f;
-        GameObject enemy = Instantiate(prefab, pos, Quaternion.identity);
+        GameObject prefab =
+            spawnMelee ? meleeEnemyPrefab : shooterEnemyPrefab;
 
-        // Make sure enemy is visible scale
-        enemy.transform.localScale = Vector3.one;
-        _activeEnemies.Add(enemy);
+        if (prefab == null)
+        {
+            Debug.LogWarning("Enemy prefab missing!");
+            return;
+        }
+
+        GameObject enemy = Instantiate(
+            prefab,
+            spawnPosition.Value,
+            Quaternion.identity
+        );
+
+        activeEnemies.Add(enemy);
+
+        AudioManager.Instance?.PlayEnemySpawn();
     }
 
-    Vector3? GetSpawnPosition()
+    private Vector3? GetSpawnPosition()
     {
-        // Try AR planes first
-        if (_planeManager != null)
+#if UNITY_EDITOR
+
+        Vector2 random =
+            Random.insideUnitCircle * spawnRadius;
+
+        return new Vector3(
+            random.x,
+            0f,
+            random.y + 5f
+        );
+
+#else
+
+        if (planeManager == null)
+            return null;
+
+        foreach (ARPlane plane in planeManager.trackables)
         {
-            foreach (var plane in _planeManager.trackables)
+            if (plane.alignment == PlaneAlignment.HorizontalUp)
             {
-                if (plane.alignment == PlaneAlignment.HorizontalUp)
-                {
-                    Vector2 random = Random.insideUnitCircle * spawnRadius;
-                    return plane.transform.position + new Vector3(random.x, 0, random.y);
-                }
+                Vector2 random =
+                    Random.insideUnitCircle * spawnRadius;
+
+                return plane.transform.position +
+                       new Vector3(
+                           random.x,
+                           0f,
+                           random.y
+                       );
             }
         }
 
-        // Fallback for editor testing - spawn around the player
-        Transform cam = Camera.main.transform;
-        Vector2 editorRandom = Random.insideUnitCircle * spawnRadius;
-        return cam.position + new Vector3(editorRandom.x, 0, editorRandom.y + 3f);
+        return null;
+
+#endif
     }
 
-    void ClearAllEnemies()
+    public void RemoveEnemy(GameObject enemy)
     {
-        foreach (var e in _activeEnemies)
-            if (e != null) Destroy(e);
-        _activeEnemies.Clear();
+        if (activeEnemies.Contains(enemy))
+        {
+            activeEnemies.Remove(enemy);
+        }
+    }
+
+    private void ClearAllEnemies()
+    {
+        foreach (GameObject enemy in activeEnemies)
+        {
+            if (enemy != null)
+                Destroy(enemy);
+        }
+
+        activeEnemies.Clear();
     }
 }

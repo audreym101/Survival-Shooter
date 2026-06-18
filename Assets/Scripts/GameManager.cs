@@ -16,33 +16,37 @@ public class GameManager : MonoBehaviour
     public UnityEvent onGameEnd;
     public UnityEvent<float> onTimeChanged;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance != null)
         {
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
     }
 
-    void Start()
+    private void Start()
     {
         IsPlaying = false;
         TimeRemaining = gameDuration;
 
-        // SAFE PLAYER DEATH HOOK
         PlayerHealth playerHealth = Object.FindFirstObjectByType<PlayerHealth>();
+
         if (playerHealth != null)
+        {
             playerHealth.onPlayerDeath.AddListener(EndGame);
+        }
     }
 
-    void Update()
+    private void Update()
     {
         if (!IsPlaying)
             return;
 
         TimeRemaining -= Time.deltaTime;
+
         onTimeChanged?.Invoke(TimeRemaining);
 
         if (TimeRemaining <= 0f)
@@ -52,24 +56,43 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ─────────────────────────────
-    // GAME FLOW
-    // ─────────────────────────────
+    // ===================================
+    // START GAME
+    // ===================================
 
     public void StartGame()
     {
         if (DifficultyManager.Instance != null)
+        {
             gameDuration = DifficultyManager.Instance.GameDuration;
+        }
 
         TimeRemaining = gameDuration;
         IsPlaying = true;
 
         ScoreManager.Instance?.ResetScore();
 
+        EnemySpawner spawner =
+            Object.FindFirstObjectByType<EnemySpawner>();
+
+        if (spawner != null)
+        {
+            spawner.StartSpawning();
+            Debug.Log("Enemy Spawner Started");
+        }
+        else
+        {
+            Debug.LogWarning("EnemySpawner not found in scene!");
+        }
+
         onGameStart?.Invoke();
 
         Debug.Log("Game Started");
     }
+
+    // ===================================
+    // END GAME
+    // ===================================
 
     public void EndGame()
     {
@@ -78,6 +101,15 @@ public class GameManager : MonoBehaviour
 
         IsPlaying = false;
 
+        EnemySpawner spawner =
+            Object.FindFirstObjectByType<EnemySpawner>();
+
+        if (spawner != null)
+        {
+            spawner.StopSpawning();
+            Debug.Log("Enemy Spawner Stopped");
+        }
+
         onGameEnd?.Invoke();
 
         AudioManager.Instance?.PlayPlayerDeath();
@@ -85,10 +117,19 @@ public class GameManager : MonoBehaviour
         Debug.Log("Game Ended");
     }
 
+    // ===================================
+    // RESTART
+    // ===================================
+
     public void RestartGame()
     {
+        EndGame();
         StartGame();
     }
+
+    // ===================================
+    // RESET TO MENU
+    // ===================================
 
     public void ResetToMenuState()
     {

@@ -24,8 +24,15 @@ public abstract class EnemyBase : MonoBehaviour
     }
 
     protected virtual void Die()
-    {
-        ScoreManager.Instance?.AddScore(scoreValue);
-        Destroy(gameObject);
-    }
+{
+    ScoreManager.Instance?.AddScore(scoreValue);
+
+    EnemySpawner spawner =
+        FindFirstObjectByType<EnemySpawner>();
+
+    if (spawner != null)
+        spawner.RemoveEnemy(gameObject);
+
+    Destroy(gameObject);
+}
 }
