@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -11,8 +12,8 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private GameObject shooterEnemyPrefab;
 
     [Header("Spawn Settings")]
-    [SerializeField] private float spawnInterval = 5f;
-    [SerializeField] private float spawnRadius = 3f;
+    [SerializeField] private float spawnInterval = 3f;
+    [SerializeField] private float spawnRadius = 2f;
     [SerializeField] private int maxEnemies = 10;
 
     private ARPlaneManager planeManager;
@@ -29,7 +30,7 @@ public class EnemySpawner : MonoBehaviour
         if (spawnCoroutine == null)
         {
             spawnCoroutine = StartCoroutine(SpawnRoutine());
-            Debug.Log("Enemy spawning started");
+            Debug.Log("✅ Enemy spawning started");
         }
     }
 
@@ -42,47 +43,53 @@ public class EnemySpawner : MonoBehaviour
         }
 
         ClearAllEnemies();
+        Debug.Log("🛑 Enemy spawning stopped");
     }
 
     private IEnumerator SpawnRoutine()
     {
-        while (GameManager.Instance != null &&
-               GameManager.Instance.IsPlaying)
+        while (true)
         {
-            if (activeEnemies.Count < maxEnemies)
-            {
-                SpawnEnemy();
-            }
-
             yield return new WaitForSeconds(spawnInterval);
+
+            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+                continue;
+
+            if (activeEnemies.Count < maxEnemies)
+                SpawnEnemy();
         }
     }
 
     private void SpawnEnemy()
     {
-        Vector3? spawnPosition = GetSpawnPosition();
-
-        if (spawnPosition == null)
-            return;
+        Vector3 spawnPosition = Camera.main != null
+            ? Camera.main.transform.position + Camera.main.transform.forward * 2f
+            : Vector3.zero;
 
         bool spawnMelee = Random.value > 0.4f;
 
-        GameObject prefab =
-            spawnMelee ? meleeEnemyPrefab : shooterEnemyPrefab;
+        GameObject prefab = spawnMelee ? meleeEnemyPrefab : shooterEnemyPrefab;
 
         if (prefab == null)
         {
-            Debug.LogWarning("Enemy prefab missing!");
+            Debug.LogError("❌ Enemy prefab missing!");
             return;
         }
 
+        Debug.Log("🧟 Spawning enemy at: " + spawnPosition);
+
         GameObject enemy = Instantiate(
             prefab,
-            spawnPosition.Value,
+            spawnPosition,
             Quaternion.identity
         );
 
+        // 🔥 DEBUG VISIBILITY HELP
+        enemy.transform.localScale = Vector3.one * 1.5f;
+
         activeEnemies.Add(enemy);
+
+        Debug.Log("✅ Enemy spawned successfully");
 
         AudioManager.Instance?.PlayEnemySpawn();
     }
@@ -90,18 +97,15 @@ public class EnemySpawner : MonoBehaviour
     private Vector3? GetSpawnPosition()
     {
 #if UNITY_EDITOR
-
-        Vector2 random =
-            Random.insideUnitCircle * spawnRadius;
+        // Editor fallback (NO AR PLANE)
+        Vector2 random = Random.insideUnitCircle * spawnRadius;
 
         return new Vector3(
             random.x,
             0f,
             random.y + 5f
         );
-
 #else
-
         if (planeManager == null)
             return null;
 
@@ -109,29 +113,20 @@ public class EnemySpawner : MonoBehaviour
         {
             if (plane.alignment == PlaneAlignment.HorizontalUp)
             {
-                Vector2 random =
-                    Random.insideUnitCircle * spawnRadius;
+                Vector2 random = Random.insideUnitCircle * spawnRadius;
 
                 return plane.transform.position +
-                       new Vector3(
-                           random.x,
-                           0f,
-                           random.y
-                       );
+                       new Vector3(random.x, 0f, random.y);
             }
         }
 
         return null;
-
 #endif
     }
 
     public void RemoveEnemy(GameObject enemy)
     {
-        if (activeEnemies.Contains(enemy))
-        {
-            activeEnemies.Remove(enemy);
-        }
+        activeEnemies.Remove(enemy);
     }
 
     private void ClearAllEnemies()
@@ -143,5 +138,15 @@ public class EnemySpawner : MonoBehaviour
         }
 
         activeEnemies.Clear();
+    }
+
+    // OPTIONAL DEBUG TOOL
+    private void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame)
+        {
+            Debug.Log("🧪 Manual spawn test");
+            SpawnEnemy();
+        }
     }
 }
