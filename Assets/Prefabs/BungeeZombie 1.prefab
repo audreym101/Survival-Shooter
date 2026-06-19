@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &7671496560975489120
+--- !u!1001 &2338276362980269814
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -74,7 +74,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 8344e46ae9d148d488e06862623cd4ee, type: 2}
     - target: {fileID: 919132149155446097, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
       propertyPath: m_Name
-      value: BungeeZombie
+      value: BungeeZombie 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -82,29 +82,29 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: -2109249776315215387}
+      addedObject: {fileID: 1092779409328537441}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4170522852741558038}
+      addedObject: {fileID: 3596456000739967160}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3395315590075884343}
+      addedObject: {fileID: 6571578265990826989}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3539840416966361294}
+      addedObject: {fileID: 464791896492965362}
   m_SourcePrefab: {fileID: 100100000, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
---- !u!1 &7401605153408554289 stripped
+--- !u!1 &3220724813134603175 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f23f1500581a5204ea9b2add4f9a1f2b, type: 3}
-  m_PrefabInstance: {fileID: 7671496560975489120}
+  m_PrefabInstance: {fileID: 2338276362980269814}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &-2109249776315215387
+--- !u!114 &1092779409328537441
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7401605153408554289}
+  m_GameObject: {fileID: 3220724813134603175}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d676e9ec71e81174397d4b10d923d839, type: 3}
@@ -117,13 +117,13 @@ MonoBehaviour:
   shootCooldown: 2
   attackDamage: 15
   firePoint: {fileID: 0}
---- !u!136 &4170522852741558038
+--- !u!136 &3596456000739967160
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7401605153408554289}
+  m_GameObject: {fileID: 3220724813134603175}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -140,13 +140,13 @@ CapsuleCollider:
   m_Height: 0.020950528
   m_Direction: 1
   m_Center: {x: 0, y: 0.010481765, z: -0.0037646499}
---- !u!114 &3395315590075884343
+--- !u!114 &6571578265990826989
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7401605153408554289}
+  m_GameObject: {fileID: 3220724813134603175}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce561ddb9a72c554da8d49f2c446b4e9, type: 3}
@@ -154,14 +154,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damageOverlay: {fileID: 0}
   flashDuration: 0.2
---- !u!95 &3539840416966361294
+--- !u!95 &464791896492965362
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7401605153408554289}
+  m_GameObject: {fileID: 3220724813134603175}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 0}

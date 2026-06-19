@@ -24,6 +24,13 @@ MemoryCaptures/
 .DS_Store
 Thumbs.db
 
+# Large files
+*.apk
+*.zip
+*.obj
+*.fbx
+*.blend
+
 # Unity auto-generated meta for ignored folders
 Library.meta
 Temp.meta
