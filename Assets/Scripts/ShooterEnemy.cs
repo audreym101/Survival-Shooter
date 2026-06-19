@@ -16,6 +16,15 @@ public class ShooterEnemy : EnemyBase
     {
         base.Awake();
         _animator = GetComponent<Animator>();
+        
+        if (_animator == null)
+        {
+            Debug.LogWarning($"{gameObject.name} has no Animator component!");
+        }
+        else if (_animator.runtimeAnimatorController == null)
+        {
+            Debug.LogWarning($"{gameObject.name} Animator has no controller assigned!");
+        }
     }
 
     void Start()

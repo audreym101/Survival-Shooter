@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class PlayerShooter : MonoBehaviour
 {
@@ -19,6 +20,10 @@ public class PlayerShooter : MonoBehaviour
 
     void Update()
     {
+        // Don't shoot if clicking UI buttons
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
         // Mobile touch
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             TryShoot();

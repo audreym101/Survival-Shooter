@@ -23,6 +23,14 @@ public class EnemySpawner : MonoBehaviour
     private void Awake()
     {
         planeManager = FindFirstObjectByType<ARPlaneManager>();
+        
+        // Disable AR plane manager in editor (no AR support in editor)
+#if UNITY_EDITOR
+        if (planeManager != null)
+        {
+            planeManager.enabled = false;
+        }
+#endif
     }
 
     public void StartSpawning()
@@ -85,22 +93,32 @@ public class EnemySpawner : MonoBehaviour
             Quaternion.identity
         );
 
-        // Enable all renderers (they may be disabled in the FBX model)
-        SkinnedMeshRenderer[] skinnedRenderers = enemy.GetComponentsInChildren<SkinnedMeshRenderer>();
+        // Ensure the enemy and all children are active
+        enemy.SetActive(true);
+        foreach (Transform child in enemy.GetComponentsInChildren<Transform>())
+        {
+            child.gameObject.SetActive(true);
+        }
+
+        // Enable all SkinnedMeshRenderers (for animated models)
+        SkinnedMeshRenderer[] skinnedRenderers = enemy.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true);
         foreach (SkinnedMeshRenderer renderer in skinnedRenderers)
         {
             renderer.enabled = true;
+            Debug.Log($"✓ Enabled SkinnedMeshRenderer on {renderer.gameObject.name}");
         }
 
-        MeshRenderer[] meshRenderers = enemy.GetComponentsInChildren<MeshRenderer>();
+        // Enable all MeshRenderers (for static meshes)
+        MeshRenderer[] meshRenderers = enemy.GetComponentsInChildren<MeshRenderer>(includeInactive: true);
         foreach (MeshRenderer renderer in meshRenderers)
         {
             renderer.enabled = true;
+            Debug.Log($"✓ Enabled MeshRenderer on {renderer.gameObject.name}");
         }
 
         activeEnemies.Add(enemy);
 
-        Debug.Log("✅ Enemy spawned successfully");
+        Debug.Log("✅ Enemy spawned successfully at " + enemy.transform.position);
 
         AudioManager.Instance?.PlayEnemySpawn();
     }
