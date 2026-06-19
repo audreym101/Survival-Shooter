@@ -85,8 +85,18 @@ public class EnemySpawner : MonoBehaviour
             Quaternion.identity
         );
 
-        // 🔥 DEBUG VISIBILITY HELP
-        enemy.transform.localScale = Vector3.one * 1.5f;
+        // Enable all renderers (they may be disabled in the FBX model)
+        SkinnedMeshRenderer[] skinnedRenderers = enemy.GetComponentsInChildren<SkinnedMeshRenderer>();
+        foreach (SkinnedMeshRenderer renderer in skinnedRenderers)
+        {
+            renderer.enabled = true;
+        }
+
+        MeshRenderer[] meshRenderers = enemy.GetComponentsInChildren<MeshRenderer>();
+        foreach (MeshRenderer renderer in meshRenderers)
+        {
+            renderer.enabled = true;
+        }
 
         activeEnemies.Add(enemy);
 

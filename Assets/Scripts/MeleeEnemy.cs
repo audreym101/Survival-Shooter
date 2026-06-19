@@ -2,61 +2,101 @@ using UnityEngine;
 
 public class MeleeEnemy : EnemyBase
 {
-    [SerializeField] float moveSpeed = 2f;
-    [SerializeField] float attackRange = 1.5f;
-    [SerializeField] float attackCooldown = 1.5f;
-    [SerializeField] int attackDamage = 10;
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 2f;
 
-    Transform _player;
-    float _nextAttackTime;
-    Animator _animator;
+    [Header("Attack")]
+    [SerializeField] private float attackRange = 1.5f;
+    [SerializeField] private float attackCooldown = 1.5f;
+    [SerializeField] private int attackDamage = 10;
+
+    private Transform _player;
+    private float _nextAttackTime;
+    private Animator _animator;
 
     protected override void Awake()
     {
         base.Awake();
-        _animator = GetComponent<Animator>();
+
+        // Look for Animator on this object or children
+        _animator = GetComponentInChildren<Animator>();
+
+        if (_animator == null)
+        {
+            Debug.LogWarning(gameObject.name + " has no Animator component.");
+        }
     }
 
-    void Start()
+    private void Start()
     {
-        _player = Camera.main.transform;
+        if (Camera.main != null)
+        {
+            _player = Camera.main.transform;
+        }
+
         AudioManager.Instance?.PlayEnemySpawn();
     }
 
-    void Update()
+    private void Update()
     {
-        if (_player == null) return;
+        if (_player == null)
+            return;
 
         float distance = Vector3.Distance(transform.position, _player.position);
-        transform.LookAt(_player);
 
+        // Face player
+        Vector3 lookPos = _player.position;
+        lookPos.y = transform.position.y;
+        transform.LookAt(lookPos);
+
+        // Move toward player
         if (distance > attackRange)
         {
-            transform.position = Vector3.MoveTowards(transform.position, _player.position, moveSpeed * Time.deltaTime);
-            _animator?.SetBool("isWalking", true);
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                _player.position,
+                moveSpeed * Time.deltaTime
+            );
+
+            if (_animator != null)
+                _animator.SetBool("isWalking", true);
         }
         else
         {
-            _animator?.SetBool("isWalking", false);
+            if (_animator != null)
+                _animator.SetBool("isWalking", false);
+
             TryAttack();
         }
     }
 
-    void TryAttack()
+    private void TryAttack()
     {
-        if (Time.time < _nextAttackTime) return;
+        if (Time.time < _nextAttackTime)
+            return;
+
         _nextAttackTime = Time.time + attackCooldown;
 
-        _animator?.SetTrigger("attack");
+        if (_animator != null)
+            _animator.SetTrigger("attack");
+
         AudioManager.Instance?.PlayEnemyDamage();
 
         PlayerHealth player = _player.GetComponent<PlayerHealth>();
-        player?.TakeDamage(attackDamage);
+
+        if (player != null)
+        {
+            player.TakeDamage(attackDamage);
+        }
     }
 
     protected override void Die()
     {
-        _animator?.SetTrigger("die");
+        if (_animator != null)
+        {
+            _animator.SetTrigger("die");
+        }
+
         base.Die();
     }
 }
