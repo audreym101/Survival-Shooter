@@ -27,10 +27,11 @@ public class EnemySpawner : MonoBehaviour
 
     public void StartSpawning()
     {
+        Debug.Log("START SPAWNING");
+
         if (spawnCoroutine == null)
         {
             spawnCoroutine = StartCoroutine(SpawnRoutine());
-            Debug.Log("✅ Enemy spawning started");
         }
     }
 

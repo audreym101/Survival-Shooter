@@ -11,6 +11,9 @@ public class GameManager : MonoBehaviour
     public float TimeRemaining { get; private set; }
     public bool IsPlaying { get; private set; }
 
+    [Header("Spawner")]
+    [SerializeField] private EnemySpawner enemySpawner;
+
     [Header("Events")]
     public UnityEvent onGameStart;
     public UnityEvent onGameEnd;
@@ -67,27 +70,23 @@ public class GameManager : MonoBehaviour
             gameDuration = DifficultyManager.Instance.GameDuration;
         }
 
+        Debug.Log("GAME STARTED");
+
         TimeRemaining = gameDuration;
         IsPlaying = true;
 
         ScoreManager.Instance?.ResetScore();
 
-        EnemySpawner spawner =
-            Object.FindFirstObjectByType<EnemySpawner>();
+        onGameStart?.Invoke();
 
-        if (spawner != null)
+        if (enemySpawner != null)
         {
-            spawner.StartSpawning();
-            Debug.Log("Enemy Spawner Started");
+            enemySpawner.StartSpawning();
         }
         else
         {
-            Debug.LogWarning("EnemySpawner not found in scene!");
+            Debug.LogWarning("EnemySpawner not assigned in GameManager!");
         }
-
-        onGameStart?.Invoke();
-
-        Debug.Log("Game Started");
     }
 
     // ===================================
@@ -101,14 +100,7 @@ public class GameManager : MonoBehaviour
 
         IsPlaying = false;
 
-        EnemySpawner spawner =
-            Object.FindFirstObjectByType<EnemySpawner>();
-
-        if (spawner != null)
-        {
-            spawner.StopSpawning();
-            Debug.Log("Enemy Spawner Stopped");
-        }
+        enemySpawner?.StopSpawning();
 
         onGameEnd?.Invoke();
 
