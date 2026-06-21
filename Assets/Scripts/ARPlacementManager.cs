@@ -1,31 +1,32 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
+
 #if UNITY_ANDROID && !UNITY_EDITOR
 using UnityEngine.Android;
 #endif
-using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.ARSubsystems;
-using System.Collections.Generic;
 
 public class ARPlacementManager : MonoBehaviour
 {
     [Header("AR Components")]
-    [SerializeField] ARRaycastManager raycastManager;
-    [SerializeField] ARPlaneManager planeManager;
-    [SerializeField] ARSession arSession;
-    [SerializeField] ARCameraManager arCameraManager;
-    [SerializeField] ARCameraBackground arCameraBackground;
+    [SerializeField] private ARRaycastManager raycastManager;
+    [SerializeField] private ARPlaneManager planeManager;
+    [SerializeField] private ARSession arSession;
+    [SerializeField] private ARCameraManager arCameraManager;
+    [SerializeField] private ARCameraBackground arCameraBackground;
 
     [Header("Placement")]
-    [SerializeField] GameObject placementIndicator;
-    [SerializeField] GameObject gameWorldPrefab;
+    [SerializeField] private GameObject placementIndicator;
+    [SerializeField] private GameObject gameWorldPrefab;
 
-    GameObject spawnedGameWorld;
-    Pose placementPose;
-    bool placementPoseIsValid = false;
-    static bool hasPlacedWorld;
+    private GameObject spawnedGameWorld;
+    private Pose placementPose;
+    private bool placementPoseIsValid;
 
-    static List<ARRaycastHit> hits = new List<ARRaycastHit>();
+    private static bool hasPlacedWorld;
+    private static readonly List<ARRaycastHit> hits = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetPlacementState()
@@ -34,7 +35,7 @@ public class ARPlacementManager : MonoBehaviour
         hits.Clear();
     }
 
-    void Start()
+    private void Start()
     {
         if (hasPlacedWorld)
         {
@@ -44,26 +45,28 @@ public class ARPlacementManager : MonoBehaviour
 
         if (planeManager == null)
             planeManager = FindFirstObjectByType<ARPlaneManager>();
+
         if (arSession == null)
             arSession = FindFirstObjectByType<ARSession>();
+
         if (arCameraManager == null)
             arCameraManager = FindFirstObjectByType<ARCameraManager>();
+
         if (arCameraBackground == null)
             arCameraBackground = FindFirstObjectByType<ARCameraBackground>();
 
         StartCoroutine(PrepareARSession());
 
 #if UNITY_EDITOR
-        // Spawn GameWorld automatically in Editor
         if (gameWorldPrefab != null)
         {
             spawnedGameWorld = Instantiate(
                 gameWorldPrefab,
                 Vector3.zero,
-                Quaternion.identity
-            );
+                Quaternion.identity);
 
             Debug.Log("Editor Mode: GameWorld spawned");
+
             GameWorldGround.Register(spawnedGameWorld.transform);
             hasPlacedWorld = true;
 
@@ -75,7 +78,7 @@ public class ARPlacementManager : MonoBehaviour
 #endif
     }
 
-    void Update()
+    private void Update()
     {
 #if !UNITY_EDITOR
         if (ARSession.state < ARSessionState.SessionTracking)
@@ -93,59 +96,48 @@ public class ARPlacementManager : MonoBehaviour
 #endif
     }
 
-    void UpdatePlacementPose()
+    private void UpdatePlacementPose()
     {
         Vector2 screenCenter =
-            new Vector2(Screen.width / 2, Screen.height / 2);
+            new Vector2(Screen.width / 2f, Screen.height / 2f);
 
-        raycastManager.Raycast(
+        if (raycastManager.Raycast(
             screenCenter,
             hits,
-            TrackableType.Planes
-        );
-
-        placementPoseIsValid = hits.Count > 0;
-
-        if (placementPoseIsValid)
+            TrackableType.Planes))
         {
+            placementPoseIsValid = true;
             placementPose = hits[0].pose;
 
-            Vector3 cameraForward =
-                Camera.main.transform.forward;
-
+            Vector3 cameraForward = Camera.main.transform.forward;
             Vector3 cameraBearing =
-                new Vector3(
-                    cameraForward.x,
-                    0,
-                    cameraForward.z
-                ).normalized;
+                new Vector3(cameraForward.x, 0, cameraForward.z).normalized;
 
             placementPose.rotation =
                 Quaternion.LookRotation(cameraBearing);
         }
+        else
+        {
+            placementPoseIsValid = false;
+        }
     }
 
-    void UpdatePlacementIndicator()
+    private void UpdatePlacementIndicator()
     {
         if (placementIndicator == null)
             return;
 
+        placementIndicator.SetActive(placementPoseIsValid);
+
         if (placementPoseIsValid)
         {
-            placementIndicator.SetActive(true);
-
             placementIndicator.transform.SetPositionAndRotation(
                 placementPose.position,
-                placementPose.rotation
-            );
-        }
-        else
-        {
-            placementIndicator.SetActive(false);
+                placementPose.rotation);
         }
     }
 
-    void PlaceGameWorld()
+    private void PlaceGameWorld()
     {
         if (spawnedGameWorld != null || hasPlacedWorld)
             return;
@@ -153,24 +145,23 @@ public class ARPlacementManager : MonoBehaviour
         spawnedGameWorld = Instantiate(
             gameWorldPrefab,
             placementPose.position,
-            placementPose.rotation
-        );
+            placementPose.rotation);
 
         GameWorldGround.Register(spawnedGameWorld.transform);
+
         hasPlacedWorld = true;
 
-        placementIndicator.SetActive(false);
+        if (placementIndicator != null)
+            placementIndicator.SetActive(false);
 
         Debug.Log("Game World Placed!");
 
         GameManager.Instance?.StartGame();
     }
 
-    void EnableHorizontalPlaneTracking()
+    private void EnableHorizontalPlaneTracking()
     {
-#if UNITY_EDITOR
-        return;
-#else
+#if !UNITY_EDITOR
         if (arSession != null)
             arSession.enabled = true;
 
@@ -180,31 +171,34 @@ public class ARPlacementManager : MonoBehaviour
         if (arCameraBackground != null)
             arCameraBackground.enabled = true;
 
-        if (planeManager == null)
-            return;
-
-        planeManager.enabled = true;
-        planeManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
+        if (planeManager != null)
+        {
+            planeManager.enabled = true;
+            planeManager.requestedDetectionMode =
+                PlaneDetectionMode.Horizontal;
+        }
 #endif
     }
 
-    IEnumerator PrepareARSession()
+    private IEnumerator PrepareARSession()
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
         {
             Permission.RequestUserPermission(Permission.Camera);
 
-            float permissionWaitDeadline = Time.realtimeSinceStartup + 10f;
+            float deadline =
+                Time.realtimeSinceStartup + 10f;
+
             while (!Permission.HasUserAuthorizedPermission(Permission.Camera) &&
-                   Time.realtimeSinceStartup < permissionWaitDeadline)
+                   Time.realtimeSinceStartup < deadline)
             {
                 yield return null;
             }
 
             if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
             {
-                Debug.LogError("Camera permission was not granted, so AR plane tracking cannot start.");
+                Debug.LogError("Camera permission denied.");
                 yield break;
             }
         }
@@ -224,11 +218,13 @@ public class ARPlacementManager : MonoBehaviour
 
         if (ARSession.state == ARSessionState.Unsupported)
         {
-            Debug.LogError("AR is unsupported on this phone or ARCore is unavailable.");
+            Debug.LogError("AR is unsupported on this device.");
             yield break;
         }
 #endif
 
         EnableHorizontalPlaneTracking();
+
+        yield return null;
     }
 }
