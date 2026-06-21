@@ -33,7 +33,7 @@ public class UIManager : MonoBehaviour
     {
         Debug.Log("UIManager initialized in GameScene");
 
-        ShowInGame(); // default state (NO start menu anymore)
+        ShowPlacementMode();
 
         if (GameManager.Instance == null)
         {
@@ -69,6 +69,15 @@ public class UIManager : MonoBehaviour
     {
         if (inGamePanel != null)
             inGamePanel.SetActive(true);
+
+        if (endGamePanel != null)
+            endGamePanel.SetActive(false);
+    }
+
+    void ShowPlacementMode()
+    {
+        if (inGamePanel != null)
+            inGamePanel.SetActive(false);
 
         if (endGamePanel != null)
             endGamePanel.SetActive(false);
