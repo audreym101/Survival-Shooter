@@ -55,11 +55,14 @@ public class MeleeEnemy : EnemyBase
         // Move toward player
         if (distance > attackRange)
         {
-            transform.position = Vector3.MoveTowards(
+            Vector3 nextPosition = Vector3.MoveTowards(
                 groundedEnemyPosition,
                 groundedPlayerPosition,
                 moveSpeed * Time.deltaTime
             );
+            transform.position = GameWorldGround.HasWorld
+                ? GameWorldGround.ClampToPlayArea(nextPosition)
+                : nextPosition;
 
             if (_animator != null)
                 _animator.SetBool("isWalking", true);

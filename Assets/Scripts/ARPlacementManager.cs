@@ -97,10 +97,10 @@ public class ARPlacementManager : MonoBehaviour
                 Vector3.zero,
                 Quaternion.identity);
 
-            NormalizeSpawnedWorld(spawnedGameWorld.transform, 0f);
+            Bounds? worldBounds = NormalizeSpawnedWorld(spawnedGameWorld.transform, 0f);
             Debug.Log("Editor Mode: GameWorld spawned");
 
-            GameWorldGround.Register(spawnedGameWorld.transform, 0f);
+            GameWorldGround.Register(spawnedGameWorld.transform, 0f, worldBounds);
             hasPlacedWorld = true;
 
             GameManager.Instance?.StartGame();
@@ -241,8 +241,8 @@ public class ARPlacementManager : MonoBehaviour
             pose.position,
             pose.rotation);
 
-        NormalizeSpawnedWorld(spawnedGameWorld.transform, pose.position.y);
-        GameWorldGround.Register(spawnedGameWorld.transform, pose.position.y);
+        Bounds? worldBounds = NormalizeSpawnedWorld(spawnedGameWorld.transform, pose.position.y);
+        GameWorldGround.Register(spawnedGameWorld.transform, pose.position.y, worldBounds);
 
         hasPlacedWorld = true;
         placementPoseIsValid = false;
@@ -376,14 +376,14 @@ public class ARPlacementManager : MonoBehaviour
         return new Pose(position, rotation);
     }
 
-    private void NormalizeSpawnedWorld(Transform worldRoot, float groundY)
+    private Bounds? NormalizeSpawnedWorld(Transform worldRoot, float groundY)
     {
         if (worldRoot == null)
-            return;
+            return null;
 
         Renderer[] renderers = worldRoot.GetComponentsInChildren<Renderer>(includeInactive: true);
         if (renderers.Length == 0)
-            return;
+            return null;
 
         Bounds bounds = renderers[0].bounds;
         for (int i = 1; i < renderers.Length; i++)
@@ -404,6 +404,12 @@ public class ARPlacementManager : MonoBehaviour
         Vector3 delta = desiredCenter - new Vector3(bounds.center.x, desiredCenter.y, bounds.center.z);
         delta.y = groundY - bounds.min.y;
         worldRoot.position += delta;
+
+        bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        return bounds;
     }
 }
 #pragma warning restore 0414

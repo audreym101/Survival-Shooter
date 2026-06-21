@@ -54,11 +54,14 @@ public class ShooterEnemy : EnemyBase
 
         if (distance > shootingDistance)
         {
-            transform.position = Vector3.MoveTowards(
+            Vector3 nextPosition = Vector3.MoveTowards(
                 groundedEnemyPosition,
                 groundedPlayerPosition,
                 moveSpeed * Time.deltaTime
             );
+            transform.position = GameWorldGround.HasWorld
+                ? GameWorldGround.ClampToPlayArea(nextPosition)
+                : nextPosition;
             _animator?.SetBool("isWalking", true);
         }
         else
