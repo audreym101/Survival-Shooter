@@ -83,7 +83,7 @@ public class EditorCameraController : MonoBehaviour
             return;
 
         Vector3 position = movementRoot.position;
-        position.y = groundY;
+        position.y = GameWorldGround.HasWorld ? GameWorldGround.GroundY : groundY;
         movementRoot.position = position;
     }
 }

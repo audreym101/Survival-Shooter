@@ -43,14 +43,22 @@ public class ShooterEnemy : EnemyBase
     {
         if (_player == null) return;
 
-        float distance = Vector3.Distance(transform.position, _player.position);
-        Vector3 lookPosition = _player.position;
-        lookPosition.y = transform.position.y;
-        transform.LookAt(lookPosition);
+        Vector3 groundedPlayerPosition = GameWorldGround.ProjectToGround(_player.position);
+        Vector3 groundedEnemyPosition = GameWorldGround.ProjectToGround(transform.position);
+        transform.position = groundedEnemyPosition;
+
+        float distance = Vector3.Distance(groundedEnemyPosition, groundedPlayerPosition);
+
+        if ((groundedPlayerPosition - groundedEnemyPosition).sqrMagnitude > Mathf.Epsilon)
+            transform.LookAt(groundedPlayerPosition);
 
         if (distance > shootingDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, _player.position, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(
+                groundedEnemyPosition,
+                groundedPlayerPosition,
+                moveSpeed * Time.deltaTime
+            );
             _animator?.SetBool("isWalking", true);
         }
         else

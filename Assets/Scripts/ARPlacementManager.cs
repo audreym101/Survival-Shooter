@@ -7,6 +7,7 @@ public class ARPlacementManager : MonoBehaviour
 {
     [Header("AR Components")]
     [SerializeField] ARRaycastManager raycastManager;
+    [SerializeField] ARPlaneManager planeManager;
 
     [Header("Placement")]
     [SerializeField] GameObject placementIndicator;
@@ -20,6 +21,11 @@ public class ARPlacementManager : MonoBehaviour
 
     void Start()
     {
+        if (planeManager == null)
+            planeManager = FindFirstObjectByType<ARPlaneManager>();
+
+        EnableHorizontalPlaneTracking();
+
 #if UNITY_EDITOR
         // Spawn GameWorld automatically in Editor
         if (gameWorldPrefab != null)
@@ -31,6 +37,7 @@ public class ARPlacementManager : MonoBehaviour
             );
 
             Debug.Log("Editor Mode: GameWorld spawned");
+            GameWorldGround.Register(spawnedGameWorld.transform);
 
             GameManager.Instance?.StartGame();
         }
@@ -118,10 +125,25 @@ public class ARPlacementManager : MonoBehaviour
             placementPose.rotation
         );
 
+        GameWorldGround.Register(spawnedGameWorld.transform);
+
         placementIndicator.SetActive(false);
 
         Debug.Log("Game World Placed!");
 
         GameManager.Instance?.StartGame();
+    }
+
+    void EnableHorizontalPlaneTracking()
+    {
+#if UNITY_EDITOR
+        return;
+#else
+        if (planeManager == null)
+            return;
+
+        planeManager.enabled = true;
+        planeManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
+#endif
     }
 }

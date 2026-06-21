@@ -23,12 +23,12 @@ public class EnemySpawner : MonoBehaviour
     private void Awake()
     {
         planeManager = FindFirstObjectByType<ARPlaneManager>();
-        
-        // Disable AR plane manager in editor (no AR support in editor)
-#if UNITY_EDITOR
+
+#if !UNITY_EDITOR
         if (planeManager != null)
         {
-            planeManager.enabled = false;
+            planeManager.enabled = true;
+            planeManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
         }
 #endif
     }
@@ -71,9 +71,8 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnEnemy()
     {
-        Vector3 spawnPosition = Camera.main != null
-            ? Camera.main.transform.position + Camera.main.transform.forward * 2f
-            : Vector3.zero;
+        Vector3? groundedSpawnPosition = GetSpawnPosition();
+        Vector3 spawnPosition = groundedSpawnPosition ?? Vector3.zero;
 
         bool spawnMelee = Random.value > 0.4f;
 
@@ -125,16 +124,21 @@ public class EnemySpawner : MonoBehaviour
 
     private Vector3? GetSpawnPosition()
     {
-#if UNITY_EDITOR
-        // Editor fallback (NO AR PLANE)
-        Vector2 random = Random.insideUnitCircle * spawnRadius;
+        if (GameWorldGround.HasWorld && Camera.main != null)
+        {
+            Vector2 random = Random.insideUnitCircle * spawnRadius;
+            Vector3 forward = Camera.main.transform.forward;
+            forward.y = 0f;
 
-        return new Vector3(
-            random.x,
-            0f,
-            random.y + 5f
-        );
-#else
+            if (forward.sqrMagnitude <= Mathf.Epsilon)
+                forward = Vector3.forward;
+
+            Vector3 center = GameWorldGround.ProjectToGround(Camera.main.transform.position)
+                             + forward.normalized * spawnRadius;
+
+            return GameWorldGround.ProjectToGround(center + new Vector3(random.x, 0f, random.y));
+        }
+
         if (planeManager == null)
             return null;
 
@@ -150,7 +154,6 @@ public class EnemySpawner : MonoBehaviour
         }
 
         return null;
-#endif
     }
 
     public void RemoveEnemy(GameObject enemy)

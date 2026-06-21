@@ -2376,7 +2376,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &640618176
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2384,14 +2384,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 640618175}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a8f0ef04ee19518449ded642d1ff60f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   raycastManager: {fileID: 2042706083}
+  planeManager: {fileID: 2042706084}
   placementIndicator: {fileID: 1955724392221062718, guid: 4a91b39a9ebcb4d4a93822c70089a587, type: 3}
-  gameWorldPrefab: {fileID: 5848195611036701308, guid: f8fa368733892f840b9d21be95f42d82, type: 3}
+  gameWorldPrefab: {fileID: 6925525280956390487, guid: 67b53a95705591442833e88049410a0c, type: 3}
 --- !u!4 &640618177
 Transform:
   m_ObjectHideFlags: 0
@@ -6558,6 +6559,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   raycastManager: {fileID: 2042706083}
+  planeManager: {fileID: 2042706084}
   placementIndicator: {fileID: 2726215565027294217, guid: 59b67f49d2d2f75428544202ce898e8a, type: 3}
   gameWorldPrefab: {fileID: 6925525280956390487, guid: 67b53a95705591442833e88049410a0c, type: 3}
 --- !u!1 &2050643152
