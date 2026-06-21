@@ -20,6 +20,9 @@ public class PlayerShooter : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && !GameManager.Instance.IsPlaying)
+            return;
+
         // Don't shoot if clicking UI buttons
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             return;
@@ -44,7 +47,10 @@ public class PlayerShooter : MonoBehaviour
         Ray ray = arCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f));
         if (Physics.Raycast(ray, out RaycastHit hit, shootRange))
         {
-            if (hit.collider.TryGetComponent(out EnemyBase enemy))
+            EnemyBase enemy = hit.collider.GetComponentInParent<EnemyBase>()
+                              ?? hit.collider.GetComponentInChildren<EnemyBase>();
+
+            if (enemy != null)
                 enemy.TakeDamage(bulletDamage);
         }
     }

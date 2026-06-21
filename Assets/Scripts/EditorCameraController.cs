@@ -7,6 +7,8 @@ public class EditorCameraController : MonoBehaviour
     [SerializeField] float lookSpeed = 2f;
     [SerializeField] float buttonStepDistance = 0.5f;
     [SerializeField] Transform movementRoot;
+    [SerializeField] bool keepOnGround = true;
+    [SerializeField] float groundY = 0f;
 
     float _rotX;
     float _rotY;
@@ -28,21 +30,26 @@ public class EditorCameraController : MonoBehaviour
         Vector3 move = Vector3.zero;
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) move += transform.forward;
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) move -= transform.forward;
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) move -= transform.right;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) move += transform.right;
-            if (Keyboard.current.eKey.isPressed) move += Vector3.up;
-            if (Keyboard.current.qKey.isPressed) move -= Vector3.up;
+            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) move += GroundedDirection(transform.forward);
+            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) move -= GroundedDirection(transform.forward);
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) move -= GroundedDirection(transform.right);
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) move += GroundedDirection(transform.right);
+
+            if (!keepOnGround)
+            {
+                if (Keyboard.current.eKey.isPressed) move += Vector3.up;
+                if (Keyboard.current.qKey.isPressed) move -= Vector3.up;
+            }
         }
 
         if (!Mathf.Approximately(_buttonForwardInput, 0f))
-            move += transform.forward * _buttonForwardInput;
+            move += GroundedDirection(transform.forward) * _buttonForwardInput;
 
         if (move.sqrMagnitude > 1f)
             move.Normalize();
 
         movementRoot.position += move * moveSpeed * Time.deltaTime;
+        KeepRootOnGround();
     }
 
     public void StartMovingForward() => _buttonForwardInput = 1f;
@@ -57,6 +64,26 @@ public class EditorCameraController : MonoBehaviour
 
     void MoveStep(float direction)
     {
-        movementRoot.position += transform.forward * direction * buttonStepDistance;
+        movementRoot.position += GroundedDirection(transform.forward) * direction * buttonStepDistance;
+        KeepRootOnGround();
+    }
+
+    Vector3 GroundedDirection(Vector3 direction)
+    {
+        if (!keepOnGround)
+            return direction;
+
+        direction.y = 0f;
+        return direction.sqrMagnitude > Mathf.Epsilon ? direction.normalized : Vector3.zero;
+    }
+
+    void KeepRootOnGround()
+    {
+        if (!keepOnGround || movementRoot == null)
+            return;
+
+        Vector3 position = movementRoot.position;
+        position.y = groundY;
+        movementRoot.position = position;
     }
 }

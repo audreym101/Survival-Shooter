@@ -96,7 +96,7 @@ public class UIManager : MonoBehaviour
         if (timeSurvivedText != null)
             timeSurvivedText.text = "Time: " + Mathf.FloorToInt(timeSurvived) + "s";
 
-        LeaderboardManager.Instance?.SaveScore(
+        LeaderboardManager.SaveScoreEntry(
             ScoreManager.Instance.Score,
             ScoreManager.Instance.EnemiesDefeated,
             Mathf.FloorToInt(timeSurvived)
