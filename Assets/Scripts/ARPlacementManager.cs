@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.Android;
 #endif
 
+#pragma warning disable 0414
 public class ARPlacementManager : MonoBehaviour
 {
     [Header("AR Components")]
@@ -24,11 +25,17 @@ public class ARPlacementManager : MonoBehaviour
     [Header("Placement")]
     [SerializeField] private GameObject placementIndicator;
     [SerializeField] private GameObject gameWorldPrefab;
+    [SerializeField] private bool autoPlaceWithoutPlane = true;
+    [SerializeField] private float autoPlaceDelay = 3f;
+    [SerializeField] private float fallbackPlacementDistance = 3f;
+    [SerializeField] private float desiredWorldDiameter = 6f;
 
     private GameObject spawnedGameWorld;
+    private GameObject spawnedPlacementIndicator;
     private Pose placementPose;
     private bool placementPoseIsValid;
     private bool arIsReady;
+    private float arReadyTime;
 
     private static bool hasPlacedWorld;
     private static readonly List<ARRaycastHit> hits = new();
@@ -58,6 +65,9 @@ public class ARPlacementManager : MonoBehaviour
 
     private void Start()
     {
+        if (hasPlacedWorld && !GameWorldGround.HasWorld)
+            hasPlacedWorld = false;
+
         if (hasPlacedWorld)
         {
             enabled = false;
@@ -76,6 +86,7 @@ public class ARPlacementManager : MonoBehaviour
         if (arCameraBackground == null)
             arCameraBackground = FindFirstObjectByType<ARCameraBackground>();
 
+        SetupPlacementIndicator();
         StartCoroutine(PrepareARSession());
 
 #if UNITY_EDITOR
@@ -86,16 +97,16 @@ public class ARPlacementManager : MonoBehaviour
                 Vector3.zero,
                 Quaternion.identity);
 
+            NormalizeSpawnedWorld(spawnedGameWorld.transform, 0f);
             Debug.Log("Editor Mode: GameWorld spawned");
 
-            GameWorldGround.Register(spawnedGameWorld.transform);
+            GameWorldGround.Register(spawnedGameWorld.transform, 0f);
             hasPlacedWorld = true;
 
             GameManager.Instance?.StartGame();
         }
 
-        if (placementIndicator != null)
-            placementIndicator.SetActive(false);
+        SetPlacementIndicatorActive(false);
 #endif
     }
 
@@ -112,6 +123,13 @@ public class ARPlacementManager : MonoBehaviour
         {
             TryPlaceGameWorld(tapPosition);
         }
+
+        if (autoPlaceWithoutPlane &&
+            !hasPlacedWorld &&
+            Time.time - arReadyTime >= autoPlaceDelay)
+        {
+            PlaceGameWorld(CreateFallbackPose());
+        }
 #endif
     }
 
@@ -121,7 +139,7 @@ public class ARPlacementManager : MonoBehaviour
 
 #if ENABLE_LEGACY_INPUT_MANAGER
         if (Input.touchCount > 0 &&
-            Input.GetTouch(0).phase == TouchPhase.Began)
+            Input.GetTouch(0).phase == UnityEngine.TouchPhase.Began)
         {
             screenPosition = Input.GetTouch(0).position;
             return true;
@@ -129,7 +147,8 @@ public class ARPlacementManager : MonoBehaviour
 #endif
 
 #if ENABLE_INPUT_SYSTEM
-        foreach (UnityEngine.InputSystem.EnhancedTouch.Touch touch in Touch.activeTouches)
+        foreach (UnityEngine.InputSystem.EnhancedTouch.Touch touch in
+                 UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)
         {
             if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began)
             {
@@ -177,14 +196,14 @@ public class ARPlacementManager : MonoBehaviour
 
     private void UpdatePlacementIndicator()
     {
-        if (placementIndicator == null)
+        if (spawnedPlacementIndicator == null)
             return;
 
-        placementIndicator.SetActive(placementPoseIsValid);
+        spawnedPlacementIndicator.SetActive(placementPoseIsValid);
 
         if (placementPoseIsValid)
         {
-            placementIndicator.transform.SetPositionAndRotation(
+            spawnedPlacementIndicator.transform.SetPositionAndRotation(
                 placementPose.position,
                 placementPose.rotation);
         }
@@ -202,7 +221,7 @@ public class ARPlacementManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("No AR plane found yet. Move the phone over a flat surface, then tap again.");
+            PlaceGameWorld(CreateFallbackPose());
         }
     }
 
@@ -222,13 +241,13 @@ public class ARPlacementManager : MonoBehaviour
             pose.position,
             pose.rotation);
 
-        GameWorldGround.Register(spawnedGameWorld.transform);
+        NormalizeSpawnedWorld(spawnedGameWorld.transform, pose.position.y);
+        GameWorldGround.Register(spawnedGameWorld.transform, pose.position.y);
 
         hasPlacedWorld = true;
         placementPoseIsValid = false;
 
-        if (placementIndicator != null)
-            placementIndicator.SetActive(false);
+        SetPlacementIndicatorActive(false);
 
         if (planeManager != null)
             planeManager.enabled = false;
@@ -305,7 +324,86 @@ public class ARPlacementManager : MonoBehaviour
 
         EnableHorizontalPlaneTracking();
         arIsReady = true;
+        arReadyTime = Time.time;
 
         yield return null;
     }
+
+    private void SetupPlacementIndicator()
+    {
+        if (placementIndicator == null)
+            return;
+
+        if (placementIndicator.scene.IsValid())
+        {
+            spawnedPlacementIndicator = placementIndicator;
+        }
+        else
+        {
+            spawnedPlacementIndicator = Instantiate(placementIndicator);
+        }
+
+        SetPlacementIndicatorActive(false);
+    }
+
+    private void SetPlacementIndicatorActive(bool active)
+    {
+        if (spawnedPlacementIndicator != null)
+            spawnedPlacementIndicator.SetActive(active);
+    }
+
+    private Pose CreateFallbackPose()
+    {
+        Transform cameraTransform = Camera.main != null ? Camera.main.transform : null;
+        if (cameraTransform == null)
+            return new Pose(Vector3.forward * fallbackPlacementDistance, Quaternion.identity);
+
+        Vector3 forward = cameraTransform.forward;
+        forward.y = 0f;
+
+        if (forward.sqrMagnitude <= Mathf.Epsilon)
+            forward = cameraTransform.forward;
+
+        Vector3 position = cameraTransform.position + forward.normalized * fallbackPlacementDistance;
+        position.y = cameraTransform.position.y - 1.2f;
+
+        Vector3 flatForward = new Vector3(cameraTransform.forward.x, 0f, cameraTransform.forward.z);
+        if (flatForward.sqrMagnitude <= Mathf.Epsilon)
+            flatForward = Vector3.forward;
+
+        Quaternion rotation = Quaternion.LookRotation(flatForward.normalized, Vector3.up);
+
+        return new Pose(position, rotation);
+    }
+
+    private void NormalizeSpawnedWorld(Transform worldRoot, float groundY)
+    {
+        if (worldRoot == null)
+            return;
+
+        Renderer[] renderers = worldRoot.GetComponentsInChildren<Renderer>(includeInactive: true);
+        if (renderers.Length == 0)
+            return;
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        float horizontalSize = Mathf.Max(bounds.size.x, bounds.size.z);
+        if (desiredWorldDiameter > 0.1f && horizontalSize > desiredWorldDiameter)
+        {
+            float scaleFactor = desiredWorldDiameter / horizontalSize;
+            worldRoot.localScale *= scaleFactor;
+
+            bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        Vector3 desiredCenter = worldRoot.position;
+        Vector3 delta = desiredCenter - new Vector3(bounds.center.x, desiredCenter.y, bounds.center.z);
+        delta.y = groundY - bounds.min.y;
+        worldRoot.position += delta;
+    }
 }
+#pragma warning restore 0414

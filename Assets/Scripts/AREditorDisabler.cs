@@ -12,25 +12,25 @@ public class AREditorDisabler
     {
 #if UNITY_EDITOR
         // Disable all AR components to prevent XR subsystem errors in editor
-        ARSession[] sessions = Object.FindObjectsOfType<ARSession>();
+        ARSession[] sessions = Object.FindObjectsByType<ARSession>(FindObjectsSortMode.None);
         foreach (ARSession session in sessions)
         {
             session.enabled = false;
         }
 
-        ARCameraManager[] cameras = Object.FindObjectsOfType<ARCameraManager>();
+        ARCameraManager[] cameras = Object.FindObjectsByType<ARCameraManager>(FindObjectsSortMode.None);
         foreach (ARCameraManager cam in cameras)
         {
             cam.enabled = false;
         }
 
-        ARPlaneManager[] planeManagers = Object.FindObjectsOfType<ARPlaneManager>();
+        ARPlaneManager[] planeManagers = Object.FindObjectsByType<ARPlaneManager>(FindObjectsSortMode.None);
         foreach (ARPlaneManager manager in planeManagers)
         {
             manager.enabled = false;
         }
 
-        ARRaycastManager[] raycastManagers = Object.FindObjectsOfType<ARRaycastManager>();
+        ARRaycastManager[] raycastManagers = Object.FindObjectsByType<ARRaycastManager>(FindObjectsSortMode.None);
         foreach (ARRaycastManager manager in raycastManagers)
         {
             manager.enabled = false;

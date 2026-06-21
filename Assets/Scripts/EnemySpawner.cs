@@ -72,7 +72,13 @@ public class EnemySpawner : MonoBehaviour
     private void SpawnEnemy()
     {
         Vector3? groundedSpawnPosition = GetSpawnPosition();
-        Vector3 spawnPosition = groundedSpawnPosition ?? Vector3.zero;
+        if (!groundedSpawnPosition.HasValue)
+        {
+            Debug.LogWarning("No AR/game-world ground found for enemy spawn yet.");
+            return;
+        }
+
+        Vector3 spawnPosition = groundedSpawnPosition.Value;
 
         bool spawnMelee = Random.value > 0.4f;
 
@@ -94,7 +100,7 @@ public class EnemySpawner : MonoBehaviour
 
         // Ensure the enemy and all children are active
         enemy.SetActive(true);
-        foreach (Transform child in enemy.GetComponentsInChildren<Transform>())
+        foreach (Transform child in enemy.GetComponentsInChildren<Transform>(includeInactive: true))
         {
             child.gameObject.SetActive(true);
         }
@@ -140,7 +146,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         if (planeManager == null)
-            return null;
+            return GetCameraFallbackSpawnPosition();
 
         foreach (ARPlane plane in planeManager.trackables)
         {
@@ -153,7 +159,28 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        return null;
+        return GetCameraFallbackSpawnPosition();
+    }
+
+    private Vector3 GetCameraFallbackSpawnPosition()
+    {
+        Transform cameraTransform = Camera.main != null ? Camera.main.transform : null;
+        if (cameraTransform == null)
+            return transform.position;
+
+        Vector3 forward = cameraTransform.forward;
+        forward.y = 0f;
+
+        if (forward.sqrMagnitude <= Mathf.Epsilon)
+            forward = Vector3.forward;
+
+        Vector2 random = Random.insideUnitCircle * spawnRadius;
+        Vector3 position = cameraTransform.position
+                           + forward.normalized * spawnRadius
+                           + new Vector3(random.x, 0f, random.y);
+        position.y = cameraTransform.position.y - 1.2f;
+
+        return position;
     }
 
     public void RemoveEnemy(GameObject enemy)

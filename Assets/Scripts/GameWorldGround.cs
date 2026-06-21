@@ -11,8 +11,16 @@ public static class GameWorldGround
         if (worldRoot == null)
             return;
 
+        Register(worldRoot, worldRoot.position.y);
+    }
+
+    public static void Register(Transform worldRoot, float groundY)
+    {
+        if (worldRoot == null)
+            return;
+
         WorldRoot = worldRoot;
-        GroundY = worldRoot.position.y;
+        GroundY = groundY;
     }
 
     public static Vector3 ProjectToGround(Vector3 position)
