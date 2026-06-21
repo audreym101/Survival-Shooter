@@ -24,9 +24,12 @@ public class ARPlacementManager : MonoBehaviour
     private GameObject spawnedGameWorld;
     private Pose placementPose;
     private bool placementPoseIsValid;
+    private bool arIsReady;
 
     private static bool hasPlacedWorld;
     private static readonly List<ARRaycastHit> hits = new();
+    private const TrackableType PlacementTrackables =
+        TrackableType.PlaneWithinPolygon | TrackableType.PlaneEstimated;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetPlacementState()
@@ -81,17 +84,16 @@ public class ARPlacementManager : MonoBehaviour
     private void Update()
     {
 #if !UNITY_EDITOR
-        if (ARSession.state < ARSessionState.SessionTracking)
+        if (!arIsReady || ARSession.state < ARSessionState.SessionTracking)
             return;
 
         UpdatePlacementPose();
         UpdatePlacementIndicator();
 
-        if (placementPoseIsValid &&
-            Input.touchCount > 0 &&
+        if (Input.touchCount > 0 &&
             Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            PlaceGameWorld();
+            TryPlaceGameWorld(Input.GetTouch(0).position);
         }
 #endif
     }
@@ -101,25 +103,32 @@ public class ARPlacementManager : MonoBehaviour
         Vector2 screenCenter =
             new Vector2(Screen.width / 2f, Screen.height / 2f);
 
-        if (raycastManager.Raycast(
-            screenCenter,
-            hits,
-            TrackableType.Planes))
-        {
-            placementPoseIsValid = true;
-            placementPose = hits[0].pose;
+        placementPoseIsValid = TryGetPlacementPose(screenCenter, out placementPose);
+    }
 
+    private bool TryGetPlacementPose(Vector2 screenPosition, out Pose pose)
+    {
+        pose = default;
+
+        if (raycastManager == null ||
+            !raycastManager.Raycast(screenPosition, hits, PlacementTrackables))
+        {
+            return false;
+        }
+
+        pose = hits[0].pose;
+
+        if (Camera.main != null)
+        {
             Vector3 cameraForward = Camera.main.transform.forward;
             Vector3 cameraBearing =
-                new Vector3(cameraForward.x, 0, cameraForward.z).normalized;
+                new Vector3(cameraForward.x, 0f, cameraForward.z);
 
-            placementPose.rotation =
-                Quaternion.LookRotation(cameraBearing);
+            if (cameraBearing.sqrMagnitude > 0.001f)
+                pose.rotation = Quaternion.LookRotation(cameraBearing.normalized);
         }
-        else
-        {
-            placementPoseIsValid = false;
-        }
+
+        return true;
     }
 
     private void UpdatePlacementIndicator()
@@ -137,26 +146,53 @@ public class ARPlacementManager : MonoBehaviour
         }
     }
 
-    private void PlaceGameWorld()
+    private void TryPlaceGameWorld(Vector2 screenPosition)
+    {
+        if (TryGetPlacementPose(screenPosition, out Pose tapPose))
+        {
+            PlaceGameWorld(tapPose);
+        }
+        else if (placementPoseIsValid)
+        {
+            PlaceGameWorld(placementPose);
+        }
+        else
+        {
+            Debug.Log("No AR plane found yet. Move the phone over a flat surface, then tap again.");
+        }
+    }
+
+    private void PlaceGameWorld(Pose pose)
     {
         if (spawnedGameWorld != null || hasPlacedWorld)
             return;
 
+        if (gameWorldPrefab == null)
+        {
+            Debug.LogError("Game world prefab is not assigned.");
+            return;
+        }
+
         spawnedGameWorld = Instantiate(
             gameWorldPrefab,
-            placementPose.position,
-            placementPose.rotation);
+            pose.position,
+            pose.rotation);
 
         GameWorldGround.Register(spawnedGameWorld.transform);
 
         hasPlacedWorld = true;
+        placementPoseIsValid = false;
 
         if (placementIndicator != null)
             placementIndicator.SetActive(false);
 
+        if (planeManager != null)
+            planeManager.enabled = false;
+
         Debug.Log("Game World Placed!");
 
         GameManager.Instance?.StartGame();
+        enabled = false;
     }
 
     private void EnableHorizontalPlaneTracking()
@@ -224,6 +260,7 @@ public class ARPlacementManager : MonoBehaviour
 #endif
 
         EnableHorizontalPlaneTracking();
+        arIsReady = true;
 
         yield return null;
     }
