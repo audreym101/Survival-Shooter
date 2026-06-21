@@ -4,6 +4,10 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem.EnhancedTouch;
+#endif
+
 #if UNITY_ANDROID && !UNITY_EDITOR
 using UnityEngine.Android;
 #endif
@@ -30,6 +34,20 @@ public class ARPlacementManager : MonoBehaviour
     private static readonly List<ARRaycastHit> hits = new();
     private const TrackableType PlacementTrackables =
         TrackableType.PlaneWithinPolygon | TrackableType.PlaneEstimated;
+
+    private void OnEnable()
+    {
+#if ENABLE_INPUT_SYSTEM
+        EnhancedTouchSupport.Enable();
+#endif
+    }
+
+    private void OnDisable()
+    {
+#if ENABLE_INPUT_SYSTEM
+        EnhancedTouchSupport.Disable();
+#endif
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetPlacementState()
@@ -90,12 +108,38 @@ public class ARPlacementManager : MonoBehaviour
         UpdatePlacementPose();
         UpdatePlacementIndicator();
 
+        if (TryGetTapPosition(out Vector2 tapPosition))
+        {
+            TryPlaceGameWorld(tapPosition);
+        }
+#endif
+    }
+
+    private bool TryGetTapPosition(out Vector2 screenPosition)
+    {
+        screenPosition = default;
+
+#if ENABLE_LEGACY_INPUT_MANAGER
         if (Input.touchCount > 0 &&
             Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            TryPlaceGameWorld(Input.GetTouch(0).position);
+            screenPosition = Input.GetTouch(0).position;
+            return true;
         }
 #endif
+
+#if ENABLE_INPUT_SYSTEM
+        foreach (UnityEngine.InputSystem.EnhancedTouch.Touch touch in Touch.activeTouches)
+        {
+            if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began)
+            {
+                screenPosition = touch.screenPosition;
+                return true;
+            }
+        }
+#endif
+
+        return false;
     }
 
     private void UpdatePlacementPose()
