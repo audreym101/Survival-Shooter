@@ -4,8 +4,8 @@ public class ShooterEnemy : EnemyBase
 {
     [SerializeField] float moveSpeed = 1.5f;
     [SerializeField] float shootingDistance = 6f;
-    [SerializeField] float shootCooldown = 2f;
-    [SerializeField] int attackDamage = 15;
+    [SerializeField] float shootCooldown = 6f;
+    [SerializeField] int attackDamage = 10;
     [SerializeField] float defaultFireHeight = 1.2f;
     [SerializeField] float defaultFireForwardOffset = 0.5f;
     [SerializeField] Transform firePoint;

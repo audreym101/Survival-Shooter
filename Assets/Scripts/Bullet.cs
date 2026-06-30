@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [SerializeField] float speed = 15f;
-    [SerializeField] float lifetime = 3f;
+    [SerializeField] float speed = 3f;
+    [SerializeField] float lifetime = 6f;
     [SerializeField] int damage = 20;
-    [SerializeField] float enemyHitRadius = 0.35f;
+    [SerializeField] float enemyHitRadius = 0.15f;
 
     float _timer;
     bool _isEnemyBullet;
