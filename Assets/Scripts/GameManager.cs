@@ -19,6 +19,8 @@ public class GameManager : MonoBehaviour
     public UnityEvent onGameEnd;
     public UnityEvent<float> onTimeChanged;
 
+    PlayerHealth _playerHealth;
+
     private void Awake()
     {
         if (Instance != null)
@@ -35,12 +37,7 @@ public class GameManager : MonoBehaviour
         IsPlaying = false;
         TimeRemaining = gameDuration;
 
-        PlayerHealth playerHealth = Object.FindFirstObjectByType<PlayerHealth>();
-
-        if (playerHealth != null)
-        {
-            playerHealth.onPlayerDeath.AddListener(EndGame);
-        }
+        CachePlayerHealth();
     }
 
     private void Update()
@@ -48,13 +45,12 @@ public class GameManager : MonoBehaviour
         if (!IsPlaying)
             return;
 
-        TimeRemaining -= Time.deltaTime;
+        TimeRemaining = Mathf.Max(0f, TimeRemaining - Time.deltaTime);
 
         onTimeChanged?.Invoke(TimeRemaining);
 
         if (TimeRemaining <= 0f)
         {
-            TimeRemaining = 0f;
             EndGame();
         }
     }
@@ -75,9 +71,13 @@ public class GameManager : MonoBehaviour
         TimeRemaining = gameDuration;
         IsPlaying = true;
 
+        CachePlayerHealth();
+        _playerHealth?.ResetHealth();
+
         ScoreManager.Instance?.ResetScore();
 
         onGameStart?.Invoke();
+        onTimeChanged?.Invoke(TimeRemaining);
 
         if (enemySpawner != null)
         {
@@ -115,7 +115,9 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        EndGame();
+        if (IsPlaying)
+            EndGame();
+
         StartGame();
     }
 
@@ -127,5 +129,19 @@ public class GameManager : MonoBehaviour
     {
         IsPlaying = false;
         TimeRemaining = gameDuration;
+    }
+
+    void CachePlayerHealth()
+    {
+        PlayerHealth foundHealth = Object.FindFirstObjectByType<PlayerHealth>();
+        if (foundHealth == null || foundHealth == _playerHealth)
+            return;
+
+        if (_playerHealth != null)
+            _playerHealth.onPlayerDeath.RemoveListener(EndGame);
+
+        _playerHealth = foundHealth;
+        _playerHealth.onPlayerDeath.RemoveListener(EndGame);
+        _playerHealth.onPlayerDeath.AddListener(EndGame);
     }
 }

@@ -33,7 +33,7 @@ public class UIManager : MonoBehaviour
     {
         Debug.Log("UIManager initialized in GameScene");
 
-        ShowInGame(); // default state (NO start menu anymore)
+        ShowPlacementMode();
 
         if (GameManager.Instance == null)
         {
@@ -47,10 +47,18 @@ public class UIManager : MonoBehaviour
 
         PlayerHealth player = Object.FindFirstObjectByType<PlayerHealth>();
         if (player != null)
+        {
             player.onHealthChanged.AddListener(UpdateHealth);
+            UpdateHealth(player.CurrentHealth);
+        }
 
         if (ScoreManager.Instance != null)
+        {
             ScoreManager.Instance.onScoreChanged.AddListener(UpdateScore);
+            UpdateScore(ScoreManager.Instance.Score);
+        }
+
+        UpdateTimer(GameManager.Instance.TimeRemaining);
     }
 
     // ─────────────────────────────
@@ -59,25 +67,45 @@ public class UIManager : MonoBehaviour
 
     void ShowInGame()
     {
-        inGamePanel.SetActive(true);
-        endGamePanel.SetActive(false);
+        if (inGamePanel != null)
+            inGamePanel.SetActive(true);
+
+        if (endGamePanel != null)
+            endGamePanel.SetActive(false);
+    }
+
+    void ShowPlacementMode()
+    {
+        if (inGamePanel != null)
+            inGamePanel.SetActive(false);
+
+        if (endGamePanel != null)
+            endGamePanel.SetActive(false);
     }
 
     void ShowEndGame()
     {
-        inGamePanel.SetActive(false);
-        endGamePanel.SetActive(true);
+        if (inGamePanel != null)
+            inGamePanel.SetActive(false);
+
+        if (endGamePanel != null)
+            endGamePanel.SetActive(true);
 
         if (ScoreManager.Instance == null || GameManager.Instance == null)
             return;
 
         float timeSurvived = GameManager.Instance.gameDuration - GameManager.Instance.TimeRemaining;
 
-        finalScoreText.text = "Score: " + ScoreManager.Instance.Score;
-        enemiesText.text = "Enemies: " + ScoreManager.Instance.EnemiesDefeated;
-        timeSurvivedText.text = "Time: " + Mathf.FloorToInt(timeSurvived) + "s";
+        if (finalScoreText != null)
+            finalScoreText.text = "Score: " + ScoreManager.Instance.Score;
 
-        LeaderboardManager.Instance?.SaveScore(
+        if (enemiesText != null)
+            enemiesText.text = "Enemies: " + ScoreManager.Instance.EnemiesDefeated;
+
+        if (timeSurvivedText != null)
+            timeSurvivedText.text = "Time: " + Mathf.FloorToInt(timeSurvived) + "s";
+
+        LeaderboardManager.SaveScoreEntry(
             ScoreManager.Instance.Score,
             ScoreManager.Instance.EnemiesDefeated,
             Mathf.FloorToInt(timeSurvived)
@@ -113,17 +141,26 @@ public class UIManager : MonoBehaviour
     public void OnStartPressed()
     {
         Debug.Log("Start button pressed");
-        GameManager.Instance.StartGame();
+        GameManager.Instance?.StartGame();
     }
 
     public void OnRestartPressed()
     {
         Debug.Log("Restart pressed");
-        GameManager.Instance.StartGame();
+        GameManager.Instance?.RestartGame();
     }
 
     public void OnMainMenuPressed()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenuScene");
+    }
+
+    public void OnExitPressed()
+    {
+        Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 }

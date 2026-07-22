@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class LeaderboardManager : MonoBehaviour
@@ -19,19 +20,42 @@ public class LeaderboardManager : MonoBehaviour
 
     public void SaveScore(int score, int enemies, int time)
     {
-        int count = Mathf.Min(PlayerPrefs.GetInt(CountKey, 0), MaxEntries - 1);
-        PlayerPrefs.SetInt(CountKey, count + 1);
-        PlayerPrefs.SetInt(ScoreKey + count, score);
-        PlayerPrefs.SetInt(EnemiesKey + count, enemies);
-        PlayerPrefs.SetInt(TimeKey + count, time);
-        PlayerPrefs.Save();
+        SaveScoreEntry(score, enemies, time);
     }
 
     public List<string> GetLeaderboardEntries()
     {
+        return GetSavedLeaderboardEntries();
+    }
+
+    public static void SaveScoreEntry(int score, int enemies, int time)
+    {
+        var entries = LoadEntries();
+        entries.Add(new LeaderboardEntry(score, enemies, time));
+        entries = entries
+            .OrderByDescending(entry => entry.Score)
+            .ThenByDescending(entry => entry.Enemies)
+            .ThenByDescending(entry => entry.Time)
+            .Take(MaxEntries)
+            .ToList();
+
+        PlayerPrefs.SetInt(CountKey, entries.Count);
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            PlayerPrefs.SetInt(ScoreKey + i, entries[i].Score);
+            PlayerPrefs.SetInt(EnemiesKey + i, entries[i].Enemies);
+            PlayerPrefs.SetInt(TimeKey + i, entries[i].Time);
+        }
+
+        PlayerPrefs.Save();
+    }
+
+    public static List<string> GetSavedLeaderboardEntries()
+    {
         int count = Mathf.Min(PlayerPrefs.GetInt(CountKey, 0), MaxEntries);
         var entries = new List<string>();
-        for (int i = count - 1; i >= 0; i--)
+        for (int i = 0; i < count; i++)
         {
             int score = PlayerPrefs.GetInt(ScoreKey + i, 0);
             int enemies = PlayerPrefs.GetInt(EnemiesKey + i, 0);
@@ -39,5 +63,36 @@ public class LeaderboardManager : MonoBehaviour
             entries.Add($"Score: {score}  Enemies: {enemies}  Time: {time}s");
         }
         return entries;
+    }
+
+    static List<LeaderboardEntry> LoadEntries()
+    {
+        int count = Mathf.Min(PlayerPrefs.GetInt(CountKey, 0), MaxEntries);
+        var entries = new List<LeaderboardEntry>();
+
+        for (int i = 0; i < count; i++)
+        {
+            entries.Add(new LeaderboardEntry(
+                PlayerPrefs.GetInt(ScoreKey + i, 0),
+                PlayerPrefs.GetInt(EnemiesKey + i, 0),
+                PlayerPrefs.GetInt(TimeKey + i, 0)
+            ));
+        }
+
+        return entries;
+    }
+
+    struct LeaderboardEntry
+    {
+        public readonly int Score;
+        public readonly int Enemies;
+        public readonly int Time;
+
+        public LeaderboardEntry(int score, int enemies, int time)
+        {
+            Score = score;
+            Enemies = enemies;
+            Time = time;
+        }
     }
 }

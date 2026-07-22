@@ -42,21 +42,27 @@ public class MeleeEnemy : EnemyBase
         if (_player == null)
             return;
 
-        float distance = Vector3.Distance(transform.position, _player.position);
+        Vector3 groundedPlayerPosition = GameWorldGround.ProjectToGround(_player.position);
+        Vector3 groundedEnemyPosition = GameWorldGround.ProjectToGround(transform.position);
+        transform.position = groundedEnemyPosition;
+
+        float distance = Vector3.Distance(groundedEnemyPosition, groundedPlayerPosition);
 
         // Face player
-        Vector3 lookPos = _player.position;
-        lookPos.y = transform.position.y;
-        transform.LookAt(lookPos);
+        if ((groundedPlayerPosition - groundedEnemyPosition).sqrMagnitude > Mathf.Epsilon)
+            transform.LookAt(groundedPlayerPosition);
 
         // Move toward player
         if (distance > attackRange)
         {
-            transform.position = Vector3.MoveTowards(
-                transform.position,
-                _player.position,
+            Vector3 nextPosition = Vector3.MoveTowards(
+                groundedEnemyPosition,
+                groundedPlayerPosition,
                 moveSpeed * Time.deltaTime
             );
+            transform.position = GameWorldGround.HasWorld
+                ? GameWorldGround.ClampToPlayArea(nextPosition)
+                : nextPosition;
 
             if (_animator != null)
                 _animator.SetBool("isWalking", true);
@@ -82,7 +88,9 @@ public class MeleeEnemy : EnemyBase
 
         AudioManager.Instance?.PlayEnemyDamage();
 
-        PlayerHealth player = _player.GetComponent<PlayerHealth>();
+        PlayerHealth player = _player.GetComponent<PlayerHealth>()
+                              ?? _player.GetComponentInParent<PlayerHealth>()
+                              ?? _player.GetComponentInChildren<PlayerHealth>();
 
         if (player != null)
         {

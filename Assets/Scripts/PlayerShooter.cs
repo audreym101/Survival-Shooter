@@ -20,20 +20,27 @@ public class PlayerShooter : MonoBehaviour
 
     void Update()
     {
-        // Don't shoot if clicking UI buttons
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        if (GameManager.Instance != null && !GameManager.Instance.IsPlaying)
             return;
 
         // Mobile touch
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
-            TryShoot();
+        {
+            Vector2 touchPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+            if (!IsPointerOverUI())
+                TryShoot(touchPosition);
+        }
 
         // Editor mouse click
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-            TryShoot();
+        {
+            Vector2 mousePosition = Mouse.current.position.ReadValue();
+            if (!IsPointerOverUI())
+                TryShoot(mousePosition);
+        }
     }
 
-    void TryShoot()
+    void TryShoot(Vector2 screenPosition)
     {
         if (Time.time < _nextFireTime) return;
         _nextFireTime = Time.time + fireRate;
@@ -41,11 +48,35 @@ public class PlayerShooter : MonoBehaviour
         if (muzzleFlash != null) muzzleFlash.Play();
         AudioManager.Instance?.PlayShoot();
 
-        Ray ray = arCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f));
+        if (arCamera == null)
+            arCamera = Camera.main;
+
+        if (arCamera == null)
+            return;
+
+        Ray ray = arCamera.ScreenPointToRay(screenPosition);
         if (Physics.Raycast(ray, out RaycastHit hit, shootRange))
         {
-            if (hit.collider.TryGetComponent(out EnemyBase enemy))
+            EnemyBase enemy = hit.collider.GetComponentInParent<EnemyBase>()
+                              ?? hit.collider.GetComponentInChildren<EnemyBase>();
+
+            if (enemy != null)
                 enemy.TakeDamage(bulletDamage);
         }
+    }
+
+    bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null)
+            return false;
+
+        if (Touchscreen.current != null &&
+            Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            int touchId = Touchscreen.current.primaryTouch.touchId.ReadValue();
+            return EventSystem.current.IsPointerOverGameObject(touchId);
+        }
+
+        return EventSystem.current.IsPointerOverGameObject();
     }
 }

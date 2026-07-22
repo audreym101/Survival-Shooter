@@ -24,11 +24,14 @@ MemoryCaptures/
 .DS_Store
 Thumbs.db
 
+# Local agent/tool state
+.agents/
+.qodo/
+.utmp/
+
 # Large files
 *.apk
 *.zip
-*.obj
-*.fbx
 *.blend
 
 # Unity auto-generated meta for ignored folders
